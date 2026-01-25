@@ -1,0 +1,5 @@
+.env
+config/default.json
+src/util/openRouterClient.ts
+node_modules/
+dist/
