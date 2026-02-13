@@ -44,14 +44,20 @@ const userJoiSchema = Joi.object({
             "string.max": `"password" should have a maximum length of {#limit}`,
             "any.required": `"password" is a required field`,
         }),
-    birthDate: Joi.string()
-        .isoDate()
-        .required()
-        .messages({
-            "string.base": `"birthDate" should be a valid date`,
-            "string.isoDate": `"birthDate" must be in ISO date format (YYYY-MM-DD)`,
-            "any.required": `"birthDate" is required`,
-        }),
+    birthDate: Joi.when("userType", {
+        is: UserType.CUSTOMER,
+        then: Joi.string()
+            .isoDate()
+            .required()
+            .messages({
+                "string.base": `"birthDate" should be a valid date`,
+                "string.isoDate": `"birthDate" must be in ISO date format (YYYY-MM-DD)`,
+                "any.required": `"birthDate" is required for customers`,
+            }),
+        otherwise: Joi.string()
+            .isoDate()
+            .optional(),
+    }),
     address: Joi.string()
         .min(5)
         .max(255)
@@ -68,13 +74,19 @@ const userJoiSchema = Joi.object({
             "any.only": `"userType" must be a valid user type`,
             "any.required": `"userType" is required`,
         }),
-    sex: Joi.string()
-        .valid(...Object.values(Sex))
-        .required()
-        .messages({
-            "any.only": `"sex" must be MALE, FEMALE, or OTHER`,
-            "any.required": `"sex" is required`,
-        }),
+    sex: Joi.when("userType", {
+        is: UserType.CUSTOMER,
+        then: Joi.string()
+            .valid(...Object.values(Sex))
+            .required()
+            .messages({
+                "any.only": `"sex" must be MALE, FEMALE, or OTHER`,
+                "any.required": `"sex" is required for customers`,
+            }),
+        otherwise: Joi.string()
+            .valid(...Object.values(Sex))
+            .optional(),
+    }),
     phoneNumber: Joi.string()
         .pattern(/^[0-9]{9,15}$/)
         .optional()
@@ -105,7 +117,7 @@ const userJoiSchema = Joi.object({
 });
 
 export const createUserService = async (data: any) => {
-    const { error } = await userJoiSchema.validateAsync(data);
+    const {error} = await userJoiSchema.validateAsync(data);
     if (error) {
         throw new AppError(HttpCodes.BAD_REQUEST, ErrorMessages.VALIDATION_ERROR);
     }
@@ -126,17 +138,19 @@ export const createUserService = async (data: any) => {
         user.email,
         "Verification Code"
     );
-    user.password = undefined;
-    return user;
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    return userObj;
 };
 
 export const resendVerificationCodeService = async (email: string) => {
-    const user: IUser = await findOneUserRepo({ email });
+    const user: IUser | null = await findOneUserRepo({email});
     if (_.isEmpty(user)) {
         throw new AppError(HttpCodes.BAD_REQUEST, ErrorMessages.USER_NOT_FOUND);
     }
     const verificationCode = generateOTP();
-    await deleteUserVerificationRepo({ userEmail: email });
+    await deleteUserVerificationRepo({userEmail: email});
     await createUserVerificationRepo({
         userEmail: user.email,
         code: verificationCode,
@@ -150,27 +164,29 @@ export const resendVerificationCodeService = async (email: string) => {
         user.email,
         "Verification Code"
     );
-    user.password = undefined;
-    return user;
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    return userObj;
 };
 
-const validateUser = async (password:any, user:any) => {
+const validateUser = async (password: any, user: any) => {
     const result = await bcrypt.compare(password, user.password);
     if (!result) {
         throw new AppError(HttpCodes.BAD_REQUEST, ErrorMessages.INVALID_CREDENTIALS);
     }
     if (!user.verified) {
         await resendVerificationCodeService(user.email);
-        return { verificationRequired: true };
+        return {verificationRequired: true};
     }
     return await generateJWT(user, false, UserType.CUSTOMER);
 };
 
-export const signInUserService = async (password:any, email:any) => {
+export const signInUserService = async (password: any, email: any) => {
     const user = (
         await userAggregationRepo([
             {
-                $match: { email },
+                $match: {email},
             },
         ])
     )[0];
@@ -184,8 +200,8 @@ export const signInUserService = async (password:any, email:any) => {
 };
 
 export const verifyUserService = async (data: any) => {
-    const { email, code } = data;
-    const userVerification: IUserVerification = await findOneUserVerificationRepo({
+    const {email, code} = data;
+    const userVerification: IUserVerification | null = await findOneUserVerificationRepo({
         userEmail: email,
     });
     if (_.isEmpty(userVerification)) {
@@ -193,9 +209,9 @@ export const verifyUserService = async (data: any) => {
     }
     if (userVerification.code.toString() === code.toString()) {
         const [user] = await Promise.all([
-            findOneUserRepo({ email }),
-            findOneAndUpdateUserRepo({ email }, { $set: { verified: true } }),
-            deleteUserVerificationRepo({ userEmail: email }),
+            findOneUserRepo({email}),
+            findOneAndUpdateUserRepo({email}, {$set: {verified: true}}),
+            deleteUserVerificationRepo({userEmail: email}),
         ]);
         return await generateJWT(user, false, UserType.CUSTOMER);
     } else {

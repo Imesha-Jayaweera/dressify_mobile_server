@@ -1,5 +1,5 @@
-import {analyzeBodyImage, BodyMeasurementInput} from "../data-access/bodyMeasurement.repo";
-export const getBodyMeasurements = async (input: BodyMeasurementInput) => {
+import {analyzeBodyImage, BodyMeasurementInput} from "../data-access/body.measurement.repo";
+export const bodyMeasurementService = async (input: BodyMeasurementInput) => {
     try {
         // Validate image data exists
         if (!input.imageBase64) {

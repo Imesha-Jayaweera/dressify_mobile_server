@@ -20,7 +20,7 @@ export interface IUser extends Document {
     __v: any;
 }
 
-const UserSchema = new Schema<IUser>(
+export const UserSchema = new Schema<IUser>(
     {
         name: {
             type: String,
@@ -38,7 +38,6 @@ const UserSchema = new Schema<IUser>(
         },
         birthDate: {
             type: String,
-            required: true,
         },
         address: {
             type: String,
@@ -52,7 +51,6 @@ const UserSchema = new Schema<IUser>(
         sex: {
             type: String,
             enum: Object.values(Sex),
-            required: true,
         },
         phoneNumber: {
             type: String,

@@ -6,13 +6,10 @@ import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import {createUserRefreshTokenRepo} from "../data-access/token.repo";
 
-export const generateJWT = async (
-    user: any,
-    isRefresh = false
-) => {
-    let payload: any;
+export const generateJWT = async (user: any, isRefresh = false, userType:string) => {
+    let payload: any = null;
 
-    switch (user.userType) {
+    switch (userType) {
         case UserType.CUSTOMER:
             payload = {
                 userId: user._id.toString(),
