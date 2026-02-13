@@ -7,7 +7,6 @@ import { initDatabase } from "./data-access";
 import { routes } from "./routes";
 import dotenv from "dotenv";
 dotenv.config();
-// import { errorHandler } from "./util/app.error";
 
 const app = express();
 const port = process.env.PORT || config.get("server.port") || 3000;
@@ -27,12 +26,9 @@ app.use(fileUpload({
     abortOnLimit: true
 }));
 
-
 // Routes initialization
 routes(app);
-// app.use(errorHandler);
 
 app.listen(port, () => {
-    // exampleFlow().then().catch(e => console.log(e));
     console.log(`Dressify API Server v${process.env.npm_package_version} started on PORT ${port}`);
 });

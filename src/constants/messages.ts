@@ -42,6 +42,9 @@ export class ErrorMessages {
     public static MISSING_REQUIRED_FIELDS = "Required fields are missing";
     public static INVALID_FORMAT = "Invalid data format";
     public static VALIDATION_ERROR = "Validation failed";
+
+    //General
+    public static INTERNAL_SERVER_ERROR = "Internal server error";
 }
 
 export class HttpCodes {
