@@ -15,6 +15,20 @@ export class InfoMessages {
     public static APPLE_LOGIN_STARTED = "Apple login started";
     public static APPLE_LOGIN_SUCCESSFUL = "Apple login successful";
 
+    // Product
+    public static PRODUCT_CREATE_STARTED = "Product creation started";
+    public static PRODUCT_CREATE_SUCCESSFUL = "Product creation successful";
+    public static PRODUCT_UPDATE_STARTED = "Product update started";
+    public static PRODUCT_UPDATE_SUCCESSFUL = "Product update successful";
+    public static PRODUCT_FETCH_STARTED = "Product fetch started";
+    public static PRODUCT_FETCH_SUCCESSFUL = "Product fetch successful";
+    public static PRODUCT_FETCH_BY_ID_STARTED = "Product fetch by ID started";
+    public static PRODUCT_FETCH_BY_ID_SUCCESSFUL = "Product fetch by ID successful";
+    public static PRODUCT_FETCH_BY_SHOP_STARTED = "Shopping center products fetch started";
+    public static PRODUCT_FETCH_BY_SHOP_SUCCESSFUL = "Shopping center products fetch successful";
+    public static PRODUCT_DELETE_STARTED = "Product delete started";
+    public static PRODUCT_DELETE_SUCCESSFUL = "Product delete successful";
+
     // Success Messages
     public static LOGOUT_SUCCESSFUL = "Log out successful";
     public static USER_VERIFICATION_SUCCESSFUL = "User verification successful";
