@@ -1,16 +1,18 @@
-import {AppError} from "../util/app.error";
+import { AppError } from "../util/app.error";
 import Joi from "joi";
-import {ErrorMessages, HttpCodes} from "../constants/messages";
+import { ErrorMessages, HttpCodes } from "../constants/messages";
 import {
-    createProductRepo, deleteProductRepo,
+    createProductRepo,
+    deleteProductRepo,
     findProductByIdRepo,
     findProductsByShoppingCenterRepo,
     updateProductRepo
 } from "../data-access/product.repo";
+import { deleteImageFromCloudinary } from "../config/cloudinary.config";
 
 const productJoiSchema = Joi.object({
     name: Joi.string().required(),
-    description: Joi.string().optional(),
+    description: Joi.string().optional().allow(''),
     category: Joi.string().required(),
     genderType: Joi.string().required(),
     sizes: Joi.array().items(
@@ -26,10 +28,9 @@ const productJoiSchema = Joi.object({
     shoppingCenterId: Joi.string().required()
 });
 
-// ✅ Validation schema for updates (all fields optional except what's being updated)
 const updateProductJoiSchema = Joi.object({
     name: Joi.string().optional(),
-    description: Joi.string().optional(),
+    description: Joi.string().optional().allow(''),
     category: Joi.string().optional(),
     genderType: Joi.string().optional(),
     sizes: Joi.array().items(
@@ -45,31 +46,33 @@ const updateProductJoiSchema = Joi.object({
 });
 
 export const createProductService = async (data: any) => {
+    console.log("🔍 CREATE SERVICE - Raw data:", data);
+
     if (typeof data.sizes === "string") {
         data.sizes = JSON.parse(data.sizes);
     }
     if (typeof data.colors === "string") {
         data.colors = JSON.parse(data.colors);
     }
-
     if (typeof data.suitableBodyTypes === "string") {
         data.suitableBodyTypes = JSON.parse(data.suitableBodyTypes);
     }
-
-    if (typeof data.images === "string") {
-        data.images = JSON.parse(data.images);
-    }
-
     if (typeof data.price === "string") {
         data.price = Number(data.price);
     }
+
+    console.log("🔍 CREATE SERVICE - Parsed data:", data);
+    console.log("🖼️ CREATE SERVICE - Cloudinary URLs:", data.images);
+
     const { error } = productJoiSchema.validate(data);
-    console.log("CREATE DATA", data);
     if (error) {
-        console.log(error);
+        console.log("❌ Validation error:", error.details);
         throw new AppError(HttpCodes.BAD_REQUEST, ErrorMessages.VALIDATION_ERROR);
     }
+
     const product = await createProductRepo(data);
+    console.log("✅ Product created with Cloudinary images:", product.images);
+
     return { success: true, data: product };
 };
 
@@ -81,7 +84,6 @@ export const updateProductService = async (id: any, data: any) => {
         throw new AppError(HttpCodes.NOT_FOUND, "Product Not Found");
     }
 
-    // ✅ Parse any stringified data
     if (typeof data.sizes === "string") {
         data.sizes = JSON.parse(data.sizes);
     }
@@ -97,14 +99,12 @@ export const updateProductService = async (id: any, data: any) => {
 
     console.log("📝 UPDATE SERVICE - Parsed data:", data);
 
-    // ✅ Validate update data
     const { error } = updateProductJoiSchema.validate(data);
     if (error) {
         console.log("❌ Validation error:", error);
         throw new AppError(HttpCodes.BAD_REQUEST, ErrorMessages.VALIDATION_ERROR);
     }
 
-    // ✅ Update the product
     const updatedProduct = await updateProductRepo({ _id: id }, data);
 
     console.log("✅ UPDATE SERVICE - Updated product totalStock:", updatedProduct?.totalStock);
@@ -130,6 +130,24 @@ export const deleteProductService = async (id: any) => {
     if (!product) {
         throw new AppError(HttpCodes.NOT_FOUND, "Product Not Found");
     }
+
+    // ✅ Delete images from Cloudinary before deleting product
+    if (product.images && product.images.length > 0) {
+        console.log(`🗑️ Deleting ${product.images.length} images from Cloudinary...`);
+
+        for (const imageUrl of product.images) {
+            try {
+                await deleteImageFromCloudinary(imageUrl);
+                console.log(`✅ Deleted image from Cloudinary: ${imageUrl}`);
+            } catch (error) {
+                console.error(`❌ Failed to delete image: ${imageUrl}`, error);
+                // Continue even if some images fail to delete
+            }
+        }
+    }
+
     await deleteProductRepo({ _id: id });
+    console.log(`✅ Product deleted: ${id}`);
+
     return { success: true, message: "Product deleted successfully" };
 };
