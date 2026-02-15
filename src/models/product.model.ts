@@ -59,13 +59,6 @@ export const ProductSchema = new Schema<IProduct>(
         ],
         images: {
             type: [String],
-            required: [true, "At least one product image is required"],
-            validate: {
-                validator: function (images: string[]) {
-                    return images.length > 0;
-                },
-                message: "Product must have at least one image",
-            },
         },
         price: {
             type: Number,
@@ -114,21 +107,33 @@ export const ProductSchema = new Schema<IProduct>(
     }
 );
 
-// Pre-save middleware to calculate total stock
+function calculateTotalStock(sizes: { size: string; stock: number }[]): number {
+    return sizes.reduce((total, sizeItem) => total + sizeItem.stock, 0);
+}
+
 ProductSchema.pre<IProduct>("save", function () {
-    this.totalStock = this.sizes.reduce((total, sizeItem) => {
-        return total + sizeItem.stock;
-    }, 0);
-
-    // Auto-set availability based on stock
+    this.totalStock = calculateTotalStock(this.sizes);
     this.isAvailable = this.totalStock > 0;
-
 });
 
-// Index for better query performance
-// ProductSchema.index({ shoppingCenterId: 1 });
-// ProductSchema.index({ category: 1, genderType: 1 });
-// ProductSchema.index({ price: 1 });
-// ProductSchema.index({ suitableBodyTypes: 1 });
+// ✅ CRITICAL FIX: Pre-update middleware for UPDATE operations
+ProductSchema.pre("findOneAndUpdate", function () {
+    const update = this.getUpdate() as any;
+
+    // If sizes are being updated, recalculate totalStock
+    if (update.sizes) {
+        const totalStock = calculateTotalStock(update.sizes);
+        update.totalStock = totalStock;
+        update.isAvailable = totalStock > 0;
+        this.setUpdate(update);
+    }
+
+    // Handle $set operator
+    if (update.$set && update.$set.sizes) {
+        const totalStock = calculateTotalStock(update.$set.sizes);
+        update.$set.totalStock = totalStock;
+        update.$set.isAvailable = totalStock > 0;
+    }
+});
 
 export const Product = model<IProduct>("Product", ProductSchema);
