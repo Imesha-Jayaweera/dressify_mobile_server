@@ -3,7 +3,7 @@ import Joi from "joi";
 import { ErrorMessages, HttpCodes } from "../constants/messages";
 import {
     createProductRepo,
-    deleteProductRepo,
+    deleteProductRepo, findAllProductsRepo,
     findProductByIdRepo,
     findProductsByShoppingCenterRepo,
     updateProductRepo
@@ -150,4 +150,26 @@ export const deleteProductService = async (id: any) => {
     console.log(`✅ Product deleted: ${id}`);
 
     return { success: true, message: "Product deleted successfully" };
+};
+
+export const getAllProductsService = async (filters: any) => {
+    const query: any = { isAvailable: true }; // Only show available products
+
+    if (filters.genderType) query.genderType = filters.genderType;
+    if (filters.category) query.category = filters.category;
+    if (filters.minPrice || filters.maxPrice) {
+        query.price = {};
+        if (filters.minPrice) query.price.$gte = Number(filters.minPrice);
+        if (filters.maxPrice) query.price.$lte = Number(filters.maxPrice);
+    }
+    if (filters.size) {
+        query['sizes.size'] = filters.size;
+        query['sizes.stock'] = { $gt: 0 }; // Only show products with stock in that size
+    }
+    if (filters.bodyType) {
+        query.suitableBodyTypes = { $in: [filters.bodyType, 'ALL'] };
+    }
+
+    const products = await findAllProductsRepo(query);
+    return { success: true, data: products };
 };

@@ -88,7 +88,7 @@ export const ProductSchema = new Schema<IProduct>(
                 validator: async function (id: Schema.Types.ObjectId) {
                     const User = model("User");
                     const user = await User.findById(id);
-                    return user?.userType === "SHOPPING_CENTER";
+                    return user?.userType === "SHOPPING_CENTER" || "TAILOR";
                 },
                 message: "Invalid shopping center ID",
             },

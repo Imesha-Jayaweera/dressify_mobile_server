@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import {
     createProductService,
-    deleteProductService,
+    deleteProductService, getAllProductsService,
     getMyProductsService,
     getProductByIdService,
     updateProductService
@@ -80,6 +80,18 @@ export const deleteProductController = async (req: Request, res: Response, next:
         console.log(InfoMessages.PRODUCT_DELETE_STARTED);
         const data = await deleteProductService(req.params.id);
         console.log(InfoMessages.PRODUCT_DELETE_SUCCESSFUL);
+        res.send(data);
+    } catch (e) {
+        next(e);
+    }
+};
+
+export const getAllProductsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        console.log(InfoMessages.PRODUCT_FETCH_ALL_STARTED);
+        const filters = req.query; // Get filters from query params
+        const data = await getAllProductsService(filters);
+        console.log(InfoMessages.PRODUCT_FETCH_ALL_SUCCESSFUL);
         res.send(data);
     } catch (e) {
         next(e);

@@ -19,3 +19,8 @@ export const findProductByIdRepo = (filters: any) => {
 export const deleteProductRepo = (filters: any) => {
     return Product.deleteOne(filters).exec();
 };
+
+// Fetch all products with filters (for customer shop page)
+export const findAllProductsRepo = (filters: any) => {
+    return Product.find(filters).populate('shoppingCenterId', 'userType businessName contactNumber').exec();
+};
