@@ -3,7 +3,7 @@ import {
     createProductService,
     deleteProductService, getAllProductsService,
     getMyProductsService,
-    getProductByIdService,
+    getProductByIdService, getRecommendedProductsService,
     updateProductService
 } from "../services/product.service";
 import { InfoMessages } from "../constants/messages";
@@ -94,6 +94,18 @@ export const getAllProductsController = async (req: Request, res: Response, next
         console.log(InfoMessages.PRODUCT_FETCH_ALL_SUCCESSFUL);
         res.send(data);
     } catch (e) {
+        next(e);
+    }
+};
+
+export const getRecommendedProductsController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        console.log('📦 Getting recommended products...');
+        const filters = req.query;
+        const data = await getRecommendedProductsService(filters);
+        res.send(data);
+    } catch (e) {
+        console.error('❌ Get recommended products error:', e);
         next(e);
     }
 };

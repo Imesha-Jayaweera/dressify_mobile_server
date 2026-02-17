@@ -173,3 +173,21 @@ export const getAllProductsService = async (filters: any) => {
     const products = await findAllProductsRepo(query);
     return { success: true, data: products };
 };
+
+export const getRecommendedProductsService = async (filters: any) => {
+    const { genderType, bodyType, skinTone } = filters;
+
+    console.log('🎯 Getting recommended products for:', { genderType, bodyType, skinTone });
+    const query: any = { isAvailable: true };
+    if (genderType) {
+        query.genderType = genderType;
+    }
+    if (bodyType) {
+        query.suitableBodyTypes = { $in: [bodyType, 'ALL'] };
+    }
+    const products = await findAllProductsRepo(query);
+
+    console.log(`✅ Found ${products.length} recommended products`);
+
+    return { success: true, data: products, filters: { genderType, bodyType, skinTone } };
+};
