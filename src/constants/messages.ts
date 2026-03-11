@@ -28,6 +28,9 @@ export class InfoMessages {
     public static PRODUCT_FETCH_BY_SHOP_SUCCESSFUL = "Shopping center products fetch successful";
     public static PRODUCT_DELETE_STARTED = "Product delete started";
     public static PRODUCT_DELETE_SUCCESSFUL = "Product delete successful";
+    public static PRODUCT_FETCH_ALL_STARTED = "All Product fetch started";
+    public static PRODUCT_FETCH_ALL_SUCCESSFUL = "All Product fetch successful";
+
 
     // Success Messages
     public static LOGOUT_SUCCESSFUL = "Log out successful";
